@@ -2,8 +2,8 @@
 
 namespace xiaochengfu\kafka\controllers;
 
+use xiaochengfu\kafka\component\Producer;
 use yii\console\Controller;
-use yii\helpers\Console;
 
 /**
  * RabbitMQ producer functionality
@@ -11,25 +11,19 @@ use yii\helpers\Console;
  */
 class ProducerController extends Controller
 {
-   public function actionPublish(){
-       $setting = \Yii::$app->params['kafka'];
-       $conf = new RdKafka\Conf();
-       $conf->set('sasl.mechanisms', 'PLAIN');
-       $conf->set('api.version.request', 'true');
-       $conf->set('sasl.username', $setting['sasl_plain_username']);
-       $conf->set('sasl.password', $setting['sasl_plain_password']);
-       $conf->set('security.protocol', 'SASL_SSL');
-       $conf->set('ssl.ca.location', $setting['ca_cert']);
-       $conf->set('message.send.max.retries', 5);
-       $rk = new RdKafka\Producer($conf);
-       $rk->setLogLevel(LOG_DEBUG);
-       $rk->addBrokers($setting['bootstrap_servers']);
-       $topic = $rk->newTopic($setting['topic_name']);
-       $a = $topic->produce(RD_KAFKA_PARTITION_UA, 0, serialize(['asdf'=>'asdfsd','sdf'=>'asdf']));
-       $rk->poll(0);
-       while ($rk->getOutQLen() > 0) {
-           $rk->poll(50);
-       }
-       echo "send succ" . PHP_EOL;
-   }
+
+    /**
+     * Description:  命令行投递消息
+     * Author: hp <xcf-hp@foxmail.com>
+     * Updater:
+     * @param array $msg
+     */
+    public function actionPublish($msg){
+        $producer = new Producer();
+        if($producer->publish($msg)){
+            echo date('Y-m-d H:i:s')." send success" . PHP_EOL;
+        }else{
+            echo date('Y-m-d H:i:s')." send fail" . PHP_EOL;
+        };
+     }
 }
